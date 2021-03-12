@@ -11,13 +11,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 [**Data Inspection:**]{.ul}
 
-To open
+To set working directory and open files
 
 ```{r}
 setwd("~/Desktop/DV_R-Assignment")
 genotypes <- read.delim("fang_et_al_genotypes.txt")
 snp_pos <-read.delim("snp_position.txt")
 ```
+
+To inspect the files:
+
+`file.info` = is used
 
 ```{r}
 file.info("fang_et_al_genotypes.txt") 
