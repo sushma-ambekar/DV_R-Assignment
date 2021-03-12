@@ -1,0 +1,38 @@
+---
+title: "DV_R-Assignment (FINAL FINAL)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1
+
+[**Data Inspection:**]{.ul}
+
+To open
+
+```{r}
+setwd("~/Desktop/DV_R-Assignment")
+genotypes <- read.delim("fang_et_al_genotypes.txt")
+snp_pos <-read.delim("snp_position.txt")
+```
+
+```{r}
+file.info("fang_et_al_genotypes.txt") 
+file.info("snp_position.txt") 
+
+file.size("fang_et_al_genotypes.txt") 
+file.size("snp_position.txt") 
+
+nrow(genotypes)
+nrow(snp_pos)
+
+ncol(genotypes)
+ncol(snp_pos)
+
+dim(genotypes) 
+dim(snp_pos)
+
+```
