@@ -8,6 +8,7 @@ The git repository has the following files/folders:
 	* contains all of codes in the form of R markdown
 * R markdown HTML file: DV_R-Assignment (FINAL).html
 	* contains all of codes in HTML format
+	* Also has images of the graphs that were computed in part 2
 * R console script: DV_R-Assignment.R 
 	* contains all of codes in form of R Script
 * ```All_Maize_Genotypes``` folder:
