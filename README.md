@@ -1,3 +1,7 @@
 # DV_R-Assignment
 
-Need to describe its general organization of the GitHub Repository
+Describe its general organization of the GitHub Repository:
+-
+The git repository has the following files/folders:
+
+* 
