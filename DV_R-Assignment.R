@@ -1,5 +1,5 @@
 #Part1
-library(tidyverse)
+
 #Data inspection
 genotypes <- read.delim("fang_et_al_genotypes.txt")
 snp_pos <-read.delim("snp_position.txt")
@@ -16,18 +16,203 @@ file.info("snp_position.txt")
 file.size("fang_et_al_genotypes.txt") 
 file.size("snp_position.txt") 
 
-#to find the number of rows/lines in a dataframe
-nrow(genotypes)
-nrow(snp_pos)
-
-
-#to find number of columns
-ncol(genotypes)
-ncol(snp_pos)
-
-#to find the number of rows and columns
+#to find the number of rows and columns:
 dim(genotypes) 
 dim(snp_pos)
 
+
+#PART1-DATA PROCESSING: 
+if(!require("tibble")) install.packages("tibble")
+library(tibble)
+
+if(!require("dplyr")) install.packages("dplyr")
+library(dplyr)
+
+
+#parse Maize and Teosinte data by the groups we need:
+maize_genotypes <- subset(genotypes, Group == "ZMMIL" | Group == "ZMMLR" | Group == "ZMMMR")
+
+teo_genotypes <- subset (genotypes, Group == "ZMPBA" | Group == "ZMPIL" | Group == "ZMPJA")
+
+#tranpose the each genotype data:
+transposed_maize <- as.data.frame(t(maize_genotypes))
+transposed_teo <- as.data.frame(t(teo_genotypes))
+
+#Progress check:
+View(transposed_maize)
+View(transposed_teo)
+
+#When looking at the data, column one doesn't have name - need to rename it as "SNP_ID": 
+
+names(transposed_maize) <- lapply(transposed_maize[1,], as.character) #this makes column one a character 
+transposed_maize <- transposed_maize [-1,] 
+
+names(transposed_teo) <- lapply(transposed_teo[1, ], as.character)
+transposed_teo <- transposed_teo[-1,]
+
+new_transposed_maize <- rownames_to_column(transposed_maize, var="SNP_ID")
+new_transposed_teo <- rownames_to_column(transposed_teo, var="SNP_ID")
+
+#sort transposed_maize and transposed_teosinte by SNP_ID:
+
+
+sorted_maize <- arrange(new_transposed_maize, SNP_ID)
+sorted_teo<- arrange(new_transposed_teo, SNP_ID) 
+
+#Parse the snp data to only have SNP_ID, chromsome_ and position and sort by SNP_ID
+snp_pos_chrom <- snp_pos[, c("SNP_ID", "Chromosome", "Position")]
+sorted_snp_pos_chrom <- arrange(snp_pos_chrom, SNP_ID)
+
+#join sorted_maize genotypes and sorted_teosinte with the sorted_snp_pos_chrom data
+joined_maize <- merge(sorted_snp_pos_chrom,sorted_maize, by.x="SNP_ID", by.y="SNP_ID", all = TRUE)
+joined_teosinte <- merge(sorted_snp_pos_chrom,sorted_teo, by.x="SNP_ID", by.y="SNP_ID", all = TRUE)
+
+#Progress check:
+View(joined_teosinte)
+View(joined_maize)
+
+#Extract data from each chromosome in maize and teosinte with increasing position with missing data indicated as "?"
+
+#sort increasing first: 
+
+increase_pos_maize <- joined_maize[order(as.numeric(as.character(joined_maize$Position))),]
+increase_pos_teo <- joined_teosinte[order(as.numeric(as.character(joined_teosinte$Position))),]
+
+#set directory: 
+setwd("~/Desktop/DV_R-Assignment/All_Maize_Genotypes/Increasing")
+
+for (i in 1:10) {
+  maize_files_inc <- increase_pos_maize[increase_pos_maize$Chromosome == i,]
+  #we can create a new CSV file for each chromosome
+  write.csv(maize_files_inc, sprintf("Chr_%d_maize_increasing",i),row.names = F)
+}
+
+setwd("~/Desktop/DV_R-Assignment/All_Teosinte_Genotypes/Increasing")
+for (i in 1:10){
+  teosinte_files_inc<-increase_pos_teo[increase_pos_teo$Chromosome==i,]
+  write.csv(teosinte_files_inc,sprintf("Chr_%d_teosinte_increasing",i),row.names = F)
+}
+
+#Extract data from each chromosome in maize and teosinte with decreasing position with missing data indicated as "-"
+
+#sort decreasing first:
+decrease_pos_maize <- joined_maize[order(-as.numeric(as.character(joined_maize$Position))),]
+decrease_pos_teo <- joined_teosinte[order(-as.numeric(as.character(joined_teosinte$Position))),]
+
+#replace missing values as "-" 
+decrease_pos_maize[decrease_pos_maize == "?/?"] <- "-"
+decrease_pos_teo [decrease_pos_teo == "?/?"] <- "-"
+
+#check progress
+View(decrease_pos_maize)
+View(decrease_pos_teo)
+
+#set directory: 
+setwd("~/Desktop/DV_R-Assignment/All_Maize_Genotypes/Decreasing")
+
+for (i in 1:10) {
+  maize_files_dec <- decrease_pos_maize[decrease_pos_maize$Chromosome == i,]
+  #we can create a new CSV file for each chromosome
+  write.csv(maize_files_dec, sprintf("Chr_%d_maize_decreasing",i),row.names = F)
+}
+
+setwd("~/Desktop/DV_R-Assignment/All_Teosinte_Genotypes/Decreasing")
+for (i in 1:10){
+  teosinte_files_decrease<-decrease_pos_teo[decrease_pos_teo$Chromosome==i,]
+  write.csv(teosinte_files_decrease,sprintf("Chr_%d_teosinte_Decreasing",i),row.names = F)
+}
+
+#PART2-DATA GRAPHING
+#load the following 
+ if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
+if(!require("tibble")) install.packages("tibble")
+library(tibble)
+if (!require("reshape2")) install.packages("reshape2")
+library(reshape2)
+if(!require("dplyr")) install.packages("dplyr")
+library(dplyr)
+if (!require("plyr")) install.packages("plyr")
+library(plyr)
+
+#transform the original genotypes file 
+transposed_genotypes <- as.data.frame(t(genotypes))
+names(transposed_genotypes) <- lapply(transposed_genotypes[1,], as.character) #this makes column one a character 
+transposed_genotypes <- transposed_genotypes[-1,] 
+
+new_transposed_genotypes <- rownames_to_column(transposed_genotypes, var="SNP_ID")
+
+#sort new_transposed_genotypes with SNP_ID and join with sorted_snp_pos_chrom
+sorted_genotypes <- arrange(new_transposed_genotypes, SNP_ID)
+joined_genotypes <- merge(sorted_snp_pos_chrom,sorted_genotypes, by.x="SNP_ID", by.y="SNP_ID", all = TRUE)
+
+#snps per chromosome
+
+ggplot(data = joined_genotypes) +
+  geom_bar(mapping = aes(x = Chromosome)) +
+  scale_x_discrete(limits=c(1:10, "unknown", "multiple")) +
+  ggtitle(label = "SNPs per chromosome") +
+  xlab(label = "Chromosome #") +
+  ylab(label = "# of SNPs") +
+  theme(
+    
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12)
+  )
+#joined_genotypes$Chromosome <- factor(joined_genotypes$Chromosome, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "multiple", "unknown", "NA"))
+#ggplot(joined_genotypes) + geom_bar(aes(joined_genotypes$Chromosome)) + xlab("Chromosome") + ylab("Total Number of SNPs")
+#ggplot(genotypes) + geom_bar(aes(genotypes$Group)) + xlab("Group") + ylab("Total Number of SNPs")
+
+
+#missing data heterozygousity 
+
+SNP_header <- colnames(genotypes)[-c(1:3)] #making a header for all SNP_IDs. 
+m.genotype  <- melt(genotypes, measure.vars = SNP_header) #using melt function make our SNP_ID as rows
+
+colnames(m.genotype)[4] <- "SNP_ID" #renaming the 4th column from "variable" to SNP_ID
+
+m.genotype[ m.genotype == "?/?" ] = "N/A"
+
+ #use mutate to create new df with new column called "HOMOZYGOUS" with TRUE and Falso 
+m.genotype_new <- 
+  mutate(m.genotype, Homozygous = m.genotype$value=="A/A" | m.genotype$value=="C/C" | m.genotype$value=="G/G" | m.genotype$value=="T/T")
+
+m.genotype_new$Homozygous [ m.genotype_new$Homozygous == "TRUE"] = "Homozygous"
+m.genotype_new$Homozygous [ m.genotype_new$Homozygous == "FALSE"] = "Heterozygous"
+m.genotype_new$Homozygous [ m.genotype_new$value == "N/A"] = "Missing"
+
+#progress report
+view(m.genotype_new)
+head(m.genotype_new) 
+
+#plot by sample_ID
+ggplot(data = m.genotype_new) +
+  geom_bar(mapping = aes(x=Sample_ID, fill=Homozygous)) +
+  scale_x_discrete(labels=NULL)+
+  ggtitle(label = "Heterozygosity By Sample ID") +
+  xlab(label = "Sample ID") +
+  ylab(label = "Amount")
+
+#plot by Group - makes it so the variable are directly beside each other rather than stacked. 
+
+ggplot(data = m.genotype_new) +
+  geom_bar(mapping = aes(x=Group, fill=Homozygous), position="dodge")
+
+#create own plot: amount of heterozygosity in each chromosome 
+
+m.joined_geno <- merge(sorted_snp_pos_chrom, m.genotype_new, by.x="SNP_ID", by.y="SNP_ID", all = TRUE)
+
+
+ggplot(data= m.joined_geno) +
+  geom_bar(mapping = aes(x = Chromosome, fill=Homozygous),position="dodge")+
+  scale_x_discrete(limits=c(1:10, "unknown", "multiple")) +
+  ggtitle(label = "Heterozygosity per Chromosome") +
+  xlab(label = "Chromosome #") +
+  ylab(label = "Amount of Heterozygosity")
+
+
+ggplot(data= m.joined_geno) +
+  geom_point(mapping = aes(x = Position, y=SNP_ID))
 
 
