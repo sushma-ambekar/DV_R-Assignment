@@ -1,0 +1,36 @@
+---
+title: "Sushma_review"
+author: "Sushma Ambekar"
+date: "3/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Review of Dua Vang's R Assignment
+
+#### Data inspection
+
+Everything ran smooth here and you used appropriate commands to look at the data.
+
+
+#### Data processing
+
+Everything is easy to understand and runs well.
+
+The transposed files look good, but after merging the two data sets, I noticed that the sample ID row from the transposed maize and teosinte files were retained in the joined_maize and joined_teosinte files, and I'm not sure why that happened, but you can take a look at it.
+
+Just a small thing- I noticed that the code chunks in a few parts of the data processing were not recognized becuase of additional spaces in the document, might be helpful to check for these before submitting to the instructors. 
+    
+
+#### Data visualization
+
+All parts of data visualization are very well explained and easy to follow. Plots look great!
+
+For plotting heterozygosity by group, for aesthetics, you could make the group names more visible by using this code instead. It rotates the x axis text by 90 degrees
+
+```{r}
+ggplot(data = m.genotype_new) + geom_bar(mapping = aes(x=Group, fill=Homozygous), position="dodge") + theme(axis.text.x = element_text(angle = 90))
+```
